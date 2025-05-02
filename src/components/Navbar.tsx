@@ -15,6 +15,7 @@ import {
 import { usePathname } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "@/store/authSlice";
+import { persistor } from "@/store/store";
 
 const Navbar = () => {
   const pathname = usePathname();
@@ -54,7 +55,10 @@ const Navbar = () => {
                 Settings
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => dispatch(logout())}
+                onClick={() => {
+                  persistor.purge(); // Clear persisted data
+                  dispatch(logout());
+                }}
                 variant="destructive"
               >
                 <LogOut className="mr-2 h-[1.2rem] w-[1.2rem]" />

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // src/redux/store.js
 import { configureStore } from "@reduxjs/toolkit";
 import { combineReducers } from "redux";
@@ -12,11 +13,19 @@ const persistConfig = {
   storage,
 };
 
-const rootReducer = combineReducers({
+const appReducer = combineReducers({
   auth: authReducer,
   team: teamReducer,
   [playerApi.reducerPath]: playerApi.reducer,
 });
+
+const rootReducer = (state: any, action: any) => {
+  if (action.type === "auth/logout") {
+    storage.removeItem("persist:root"); // optional but good for cleanup
+    return appReducer(undefined, action); // reset all state
+  }
+  return appReducer(state, action);
+};
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 
