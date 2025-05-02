@@ -29,7 +29,7 @@ import {
   CardContent,
   CardFooter,
 } from "./ui/card";
-import { deleteTeam, TeamInterface } from "@/store/teamSlice";
+import { deleteTeam, TeamInterface, updateTeam } from "@/store/teamSlice";
 import {
   Sheet,
   SheetClose,
@@ -47,6 +47,16 @@ const TeamList = () => {
   const [open, setOpen] = useState(false);
   const [teamData, setTeamData] = useState<null | TeamInterface>(null);
   const [dialogText, setDialogText] = useState<"Add New" | "Edit">("Add New");
+  const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
+  const dispatch = useDispatch();
+  const [sheetOpen, setSheetOpen] = useState(false);
+
+  const onAddPlayer = () => {
+    if (teamData) {
+      dispatch(updateTeam({ ...teamData, members: [...checkedIds] }));
+      setSheetOpen(false);
+    }
+  };
 
   return (
     <div className="flex-center flex-col">
@@ -100,9 +110,13 @@ const TeamList = () => {
               </p>
             </CardContent>
 
-            <Sheet>
+            <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
               <SheetTrigger asChild>
-                <Button className="m-auto w-3/4" variant="outline">
+                <Button
+                  onClick={() => setTeamData(team)}
+                  className="m-auto w-3/4"
+                  variant="outline"
+                >
                   Add Player
                 </Button>
               </SheetTrigger>
@@ -112,12 +126,23 @@ const TeamList = () => {
                   <SheetTitle> Add Player</SheetTitle>
                 </SheetHeader>
                 <div className="grid gap-4 py-4">
-                  <ScrollList />
+                  <ScrollList
+                    checkedIds={checkedIds}
+                    setCheckedIds={setCheckedIds}
+                    teamsData={teams}
+                  />
                 </div>
 
                 <SheetFooter>
                   <SheetClose asChild>
-                    {/* <Button type="submit">Save changes</Button> */}
+                    <Button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        onAddPlayer();
+                      }}
+                    >
+                      Save changes
+                    </Button>
                   </SheetClose>
                 </SheetFooter>
               </SheetContent>
@@ -186,23 +211,38 @@ const DeleteBtn = ({ data }: { data: TeamInterface | null }) => {
 import { useGetPlayersQuery } from "../services/playerService";
 import { Label } from "./ui/label";
 
-export function ScrollList() {
+type ChildProps = {
+  checkedIds: Set<string>;
+  setCheckedIds: React.Dispatch<React.SetStateAction<Set<string>>>;
+  teamsData: TeamInterface[];
+};
+
+export function ScrollList({
+  checkedIds,
+  setCheckedIds,
+  teamsData,
+}: ChildProps) {
   const [allData, setAllData] = useState<any[]>([]);
   const [cursor, setCursor] = useState(0);
-  const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
 
   const { data, isFetching } = useGetPlayersQuery(cursor);
 
   // Append fetched data
   useEffect(() => {
     if (data?.data) {
+      const allMembers = teamsData.flatMap((group) => group.members);
+
       setAllData((prev) => {
         const temp = [...prev, ...data.data];
         const unique = Array.from(new Set(temp));
-        return unique;
+        const filtered = unique.filter(
+          (player) => !allMembers.some((id) => player.id === id),
+        );
+
+        return filtered;
       });
     }
-  }, [data]);
+  }, [data, teamsData]);
 
   const onLoad = () => {
     setCursor(data.meta.next_cursor);
