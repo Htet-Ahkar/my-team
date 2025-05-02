@@ -23,7 +23,17 @@ const persistedReducer = persistReducer(persistConfig, rootReducer);
 export const store = configureStore({
   reducer: persistedReducer,
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(playerApi.middleware),
+    getDefaultMiddleware({
+      serializableCheck: {
+        ignoredActions: [
+          "persist/PERSIST",
+          "persist/REHYDRATE",
+          "persist/REGISTER",
+          "persist/FLUSH",
+          "persist/PAUSE",
+          "persist/PURGE",
+        ],
+      },
+    }).concat(playerApi.middleware),
 });
-
 export const persistor = persistStore(store);

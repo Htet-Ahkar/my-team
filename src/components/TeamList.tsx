@@ -1,9 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { Button } from "./ui/button";
-import { Plus, Trash2 } from "lucide-react";
+import {
+  Earth,
+  Flag,
+  Plus,
+  Trash2,
+  UsersRound,
+  Volleyball,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -12,7 +19,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import TeamForm from "./TeamForm";
 import {
   Card,
@@ -22,18 +29,35 @@ import {
   CardContent,
   CardFooter,
 } from "./ui/card";
-import { TeamInterface } from "@/store/teamSlice";
+import { deleteTeam, TeamInterface } from "@/store/teamSlice";
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "./ui/sheet";
+import { ScrollArea } from "./ui/scroll-area";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const TeamList = () => {
   const teams: TeamInterface[] = useSelector((state: any) => state.team.teams);
   const [open, setOpen] = useState(false);
+  const [teamData, setTeamData] = useState<null | TeamInterface>(null);
   const [dialogText, setDialogText] = useState<"Add New" | "Edit">("Add New");
 
   return (
     <div className="flex-center flex-col">
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button onClick={() => setDialogText("Add New")}>
+          <Button
+            onClick={() => {
+              setTeamData(null);
+              setDialogText("Add New");
+            }}
+          >
             Create new team <Plus />
           </Button>
         </DialogTrigger>
@@ -44,24 +68,60 @@ const TeamList = () => {
 
           {/* body */}
           <div className="grid gap-4 py-4">
-            <TeamForm closeDialog={() => setOpen(false)} />
+            <TeamForm
+              teamsData={teams}
+              closeDialog={() => setOpen(false)}
+              data={teamData}
+            />
           </div>
         </DialogContent>
       </Dialog>
 
       {/* card container */}
-      <div className="grid grid-cols-1 p-5 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-5 p-5 md:grid-cols-3">
         {teams.map((team) => (
-          <Card key={team.id} className="w-[350px]">
+          <Card key={team.id} className="w-[250px]">
             <CardHeader>
-              <CardTitle>{team.name}</CardTitle>
-              <CardDescription>
-                Deploy your new project in one-click.
+              <CardTitle className="flex items-center justify-between">
+                <Volleyball />
+                {team.name}
+              </CardTitle>
+              <CardDescription className="flex items-center justify-between">
+                <UsersRound /> {team.player_count}
               </CardDescription>
             </CardHeader>
+
             <CardContent>
-              <h1>hello</h1>
+              <p className="flex items-center justify-between">
+                <Flag /> {team.country}
+              </p>
+              <p className="flex items-center justify-between">
+                <Earth /> {team.region}
+              </p>
             </CardContent>
+
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button className="m-auto w-3/4" variant="outline">
+                  Add Player
+                </Button>
+              </SheetTrigger>
+
+              <SheetContent className="flex-center h-7/8" side="bottom">
+                <SheetHeader>
+                  <SheetTitle> Add Player</SheetTitle>
+                </SheetHeader>
+                <div className="grid gap-4 py-4">
+                  <ScrollList />
+                </div>
+
+                <SheetFooter>
+                  <SheetClose asChild>
+                    {/* <Button type="submit">Save changes</Button> */}
+                  </SheetClose>
+                </SheetFooter>
+              </SheetContent>
+            </Sheet>
 
             <CardFooter className="flex justify-between">
               <Button
@@ -69,12 +129,13 @@ const TeamList = () => {
                 onClick={() => {
                   setDialogText("Edit");
                   setOpen(true);
+                  setTeamData(team);
                 }}
               >
-                update
+                Edit
               </Button>
 
-              <DeleteBtn />
+              <DeleteBtn data={team} />
             </CardFooter>
           </Card>
         ))}
@@ -85,10 +146,14 @@ const TeamList = () => {
 
 export default TeamList;
 
-const DeleteBtn = () => {
+const DeleteBtn = ({ data }: { data: TeamInterface | null }) => {
+  const dispatch = useDispatch();
   const [open, setOpen] = useState(false);
   const onDelete = () => {
     setOpen(false);
+    if (data) {
+      dispatch(deleteTeam(data.id));
+    }
   };
 
   return (
@@ -109,7 +174,6 @@ const DeleteBtn = () => {
 
         <DialogFooter className="flex justify-between">
           <Button onClick={() => onDelete()} variant="destructive">
-            {" "}
             Yes
           </Button>
           <Button onClick={() => setOpen(false)}> Cancel</Button>
@@ -118,3 +182,69 @@ const DeleteBtn = () => {
     </Dialog>
   );
 };
+
+import { useGetPlayersQuery } from "../services/playerService";
+import { Label } from "./ui/label";
+
+export function ScrollList() {
+  const [allData, setAllData] = useState<any[]>([]);
+  const [cursor, setCursor] = useState(0);
+  const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
+
+  const { data, isFetching } = useGetPlayersQuery(cursor);
+
+  // Append fetched data
+  useEffect(() => {
+    if (data?.data) {
+      setAllData((prev) => {
+        const temp = [...prev, ...data.data];
+        const unique = Array.from(new Set(temp));
+        return unique;
+      });
+    }
+  }, [data]);
+
+  const onLoad = () => {
+    setCursor(data.meta.next_cursor);
+  };
+
+  const toggleChecked = (id: string) => {
+    setCheckedIds((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
+  const isChecked = (id: string) => {
+    return checkedIds.has(id);
+  };
+  return (
+    <ScrollArea className="h-[400px] w-[350px] rounded-md border">
+      {/* Use data attribute to get the viewport later */}
+
+      {allData.map((player: any, index: number) => (
+        <div key={index} className="m-1 flex items-center space-x-2">
+          <Checkbox
+            id={player.first_name}
+            checked={isChecked(player.id)}
+            onCheckedChange={() => toggleChecked(player.id)}
+          />
+          <Label htmlFor={player.first_name}>
+            {player.first_name} {player.last_name}
+          </Label>
+        </div>
+      ))}
+
+      {isFetching && <p className="text-gray-500">Loading...</p>}
+
+      <Button className="w-full" onClick={() => onLoad()}>
+        Load More ...
+      </Button>
+    </ScrollArea>
+  );
+}

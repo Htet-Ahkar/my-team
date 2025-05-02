@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -15,20 +16,36 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useDispatch } from "react-redux";
-import { addTeam } from "@/store/teamSlice";
+import { addTeam, TeamInterface, updateTeam } from "@/store/teamSlice";
+import { useEffect } from "react";
 
 const formSchema = z.object({
   name: z.string().min(2, {
     message: "Team name must be at least 2 characters.",
   }),
   player_count: z.number().min(1),
-  region: z.string().min(1),
+  region: z.string().min(1).max(10),
   country: z.string().min(1),
   members: z.array(z.string()).optional(),
 });
 
-export default function TeamForm({ closeDialog }: { closeDialog: () => void }) {
+export default function TeamForm({
+  closeDialog,
+  data,
+  teamsData,
+}: {
+  closeDialog: () => void;
+  data: TeamInterface | null;
+  teamsData: TeamInterface[];
+}) {
   const dispatch = useDispatch();
+
+  // Later, e.g., after fetching or selecting a team
+  useEffect(() => {
+    if (data) {
+      form.reset(data);
+    }
+  }, []);
 
   // 1. Define your form.
   const form = useForm<z.infer<typeof formSchema>>({
@@ -43,8 +60,23 @@ export default function TeamForm({ closeDialog }: { closeDialog: () => void }) {
 
   // 2. Define a submit handler.
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
-    dispatch(addTeam(values));
+    const isDuplicate = teamsData.some(
+      (team) => team.name === values.name && team.id !== data?.id, // skip self when editing
+    );
+
+    if (isDuplicate) {
+      form.setError("name", {
+        type: "manual",
+        message: "A team with this name already exists.",
+      });
+      return;
+    }
+
+    if (data) {
+      dispatch(updateTeam({ ...values, id: data.id }));
+    } else {
+      dispatch(addTeam(values));
+    }
 
     closeDialog(); // Close dialog after successful submit
   }
@@ -82,6 +114,8 @@ export default function TeamForm({ closeDialog }: { closeDialog: () => void }) {
                   onChange={(e) => field.onChange(Number(e.target.value))}
                 />
               </FormControl>
+              <FormDescription>1-10 players</FormDescription>
+
               <FormMessage />
             </FormItem>
           )}
@@ -115,7 +149,19 @@ export default function TeamForm({ closeDialog }: { closeDialog: () => void }) {
           )}
         />
 
-        <Button type="submit">Submit</Button>
+        <div className="flex w-full justify-between">
+          <Button type="submit">Submit</Button>
+
+          <Button
+            variant="destructive"
+            onClick={(e) => {
+              e.preventDefault();
+              closeDialog();
+            }}
+          >
+            Cancel
+          </Button>
+        </div>
       </form>
     </Form>
   );

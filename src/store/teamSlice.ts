@@ -1,6 +1,6 @@
 import { createSlice, nanoid, PayloadAction } from "@reduxjs/toolkit";
 
-interface Team {
+export interface TeamInterface {
   id: string;
   name: string;
   player_count: number;
@@ -10,7 +10,7 @@ interface Team {
 }
 
 interface TeamsState {
-  teams: Team[];
+  teams: TeamInterface[];
 }
 
 const initialState: TeamsState = {
@@ -22,19 +22,19 @@ const teamsSlice = createSlice({
   initialState,
   reducers: {
     addTeam: {
-      reducer(state, action: PayloadAction<Team>) {
+      reducer(state, action: PayloadAction<TeamInterface>) {
         state.teams.push(action.payload);
       },
-      prepare(team: Omit<Team, "id">) {
+      prepare(team: Omit<TeamInterface, "id">) {
         return { payload: { id: nanoid(), ...team } };
       },
     },
-    updateTeam(state, action: PayloadAction<Team>) {
-      const idx = state.teams.findIndex((t) => t.name === action.payload.name);
+    updateTeam(state, action: PayloadAction<TeamInterface>) {
+      const idx = state.teams.findIndex((t) => t.id === action.payload.id);
       if (idx !== -1) state.teams[idx] = action.payload;
     },
     deleteTeam(state, action: PayloadAction<string>) {
-      state.teams = state.teams.filter((t) => t.name !== action.payload);
+      state.teams = state.teams.filter((t) => t.id !== action.payload);
     },
   },
 });
