@@ -3,7 +3,8 @@ import { configureStore } from "@reduxjs/toolkit";
 import { combineReducers } from "redux";
 import storage from "redux-persist/lib/storage";
 import { persistReducer, persistStore } from "redux-persist";
-import authReducer from "./auth/authSlice";
+import authReducer from "./authSlice";
+import { playerApi } from "@/services/pokemonService";
 
 const persistConfig = {
   key: "root",
@@ -12,12 +13,16 @@ const persistConfig = {
 
 const rootReducer = combineReducers({
   auth: authReducer,
+  // Add the generated reducer as a specific top-level slice
+  [playerApi.reducerPath]: playerApi.reducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 
 export const store = configureStore({
   reducer: persistedReducer,
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware().concat(playerApi.middleware),
 });
 
 export const persistor = persistStore(store);

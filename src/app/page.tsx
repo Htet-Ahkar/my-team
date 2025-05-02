@@ -1,12 +1,13 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
+import PokemonList from "@/components/PokemonList";
 import { Button } from "@/components/ui/button";
 import { redirect } from "next/navigation";
 import { useState } from "react";
 import { useSelector } from "react-redux";
 
 export default function Home() {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const user = useSelector((state: any) => state.auth.user);
   const [page, setPage] = useState<"players" | "teams">("players");
 
@@ -33,14 +34,10 @@ export default function Home() {
       </div>
 
       {/* body */}
-      {page === "players" ? <Players /> : <Teams />}
+      {page === "players" ? <PokemonList /> : <Teams />}
     </section>
   );
 }
-
-const Players = () => {
-  return <div>Players</div>;
-};
 
 const Teams = () => {
   return <div>Teams</div>;

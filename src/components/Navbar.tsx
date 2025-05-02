@@ -13,7 +13,7 @@ import {
 } from "./ui/dropdown-menu";
 import { usePathname } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
-import { logout } from "@/store/auth/authSlice";
+import { logout } from "@/store/authSlice";
 
 const Navbar = () => {
   const pathname = usePathname();
