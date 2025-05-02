@@ -1,12 +1,17 @@
 import { createSlice, nanoid, PayloadAction } from "@reduxjs/toolkit";
 
+export interface PlayerInterface {
+  first_name: string;
+  last_name: string;
+  id: string;
+}
 export interface TeamInterface {
   id: string;
   name: string;
   player_count: number;
   region: string;
   country: string;
-  members?: string[];
+  players?: PlayerInterface[];
 }
 
 interface TeamsState {

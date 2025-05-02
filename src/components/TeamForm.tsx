@@ -26,7 +26,7 @@ const formSchema = z.object({
   player_count: z.number().min(1),
   region: z.string().min(1).max(10),
   country: z.string().min(1),
-  members: z.array(z.string()).optional(),
+  players: z.array(z.any()).optional(),
 });
 
 export default function TeamForm({

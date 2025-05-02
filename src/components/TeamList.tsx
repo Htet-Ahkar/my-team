@@ -29,7 +29,12 @@ import {
   CardContent,
   CardFooter,
 } from "./ui/card";
-import { deleteTeam, TeamInterface, updateTeam } from "@/store/teamSlice";
+import {
+  deleteTeam,
+  PlayerInterface,
+  TeamInterface,
+  updateTeam,
+} from "@/store/teamSlice";
 import {
   Sheet,
   SheetClose,
@@ -48,12 +53,16 @@ const TeamList = () => {
   const [teamData, setTeamData] = useState<null | TeamInterface>(null);
   const [dialogText, setDialogText] = useState<"Add New" | "Edit">("Add New");
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
+  const [playersData, setPlayersData] = useState<PlayerInterface[] | undefined>(
+    undefined,
+  );
   const dispatch = useDispatch();
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const onAddPlayer = () => {
+    const players = playersData;
     if (teamData) {
-      dispatch(updateTeam({ ...teamData, members: [...checkedIds] }));
+      dispatch(updateTeam({ ...teamData, players }));
       setSheetOpen(false);
     }
   };
@@ -108,12 +117,26 @@ const TeamList = () => {
               <p className="flex items-center justify-between">
                 <Earth /> {team.region}
               </p>
+
+              {team.players === undefined
+                ? null
+                : team.players.map((player) => (
+                    <Badge
+                      className="text-xs"
+                      key={player.id}
+                      variant="outline"
+                    >
+                      {player.first_name}
+                    </Badge>
+                  ))}
             </CardContent>
 
             <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
               <SheetTrigger asChild>
                 <Button
-                  onClick={() => setTeamData(team)}
+                  onClick={() => {
+                    setTeamData(team);
+                  }}
                   className="m-auto w-3/4"
                   variant="outline"
                 >
@@ -129,6 +152,7 @@ const TeamList = () => {
                   <ScrollList
                     checkedIds={checkedIds}
                     setCheckedIds={setCheckedIds}
+                    setPlayersData={setPlayersData}
                     teamsData={teams}
                   />
                 </div>
@@ -210,16 +234,21 @@ const DeleteBtn = ({ data }: { data: TeamInterface | null }) => {
 
 import { useGetPlayersQuery } from "../services/playerService";
 import { Label } from "./ui/label";
+import { Badge } from "./ui/badge";
 
 type ChildProps = {
   checkedIds: Set<string>;
   setCheckedIds: React.Dispatch<React.SetStateAction<Set<string>>>;
+  setPlayersData: React.Dispatch<
+    React.SetStateAction<PlayerInterface[] | undefined>
+  >;
   teamsData: TeamInterface[];
 };
 
 export function ScrollList({
   checkedIds,
   setCheckedIds,
+  setPlayersData,
   teamsData,
 }: ChildProps) {
   const [allData, setAllData] = useState<any[]>([]);
@@ -230,14 +259,17 @@ export function ScrollList({
   // Append fetched data
   useEffect(() => {
     if (data?.data) {
-      const allMembers = teamsData.flatMap((group) => group.members);
+      const allplayers = teamsData.flatMap((group) => group.players ?? []);
 
       setAllData((prev) => {
         const temp = [...prev, ...data.data];
         const unique = Array.from(new Set(temp));
         const filtered = unique.filter(
-          (player) => !allMembers.some((id) => player.id === id),
+          (player) => !allplayers.some(({ id }) => player.id === id),
         );
+
+        console.log(allplayers);
+        console.log(filtered);
 
         return filtered;
       });
@@ -256,6 +288,21 @@ export function ScrollList({
       } else {
         newSet.add(id);
       }
+
+      // Use the updated set here
+      const players = data.data;
+      const filtered = players.filter((player: { id: string }) =>
+        newSet.has(player.id),
+      );
+
+      setPlayersData(
+        filtered.map((p: PlayerInterface) => ({
+          first_name: p.first_name,
+          last_name: p.last_name,
+          id: p.id,
+        })),
+      );
+
       return newSet;
     });
   };
