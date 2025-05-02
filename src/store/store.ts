@@ -4,7 +4,8 @@ import { combineReducers } from "redux";
 import storage from "redux-persist/lib/storage";
 import { persistReducer, persistStore } from "redux-persist";
 import authReducer from "./authSlice";
-import { playerApi } from "@/services/pokemonService";
+import teamReducer from "./teamSlice";
+import { playerApi } from "@/services/playerService";
 
 const persistConfig = {
   key: "root",
@@ -13,7 +14,7 @@ const persistConfig = {
 
 const rootReducer = combineReducers({
   auth: authReducer,
-  // Add the generated reducer as a specific top-level slice
+  team: teamReducer,
   [playerApi.reducerPath]: playerApi.reducer,
 });
 

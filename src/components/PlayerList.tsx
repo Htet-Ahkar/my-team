@@ -2,9 +2,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useGetPlayersQuery } from "../services/pokemonService";
+import { useGetPlayersQuery } from "../services/playerService";
 
-export default function PokemonList() {
+export default function PlayerList() {
   const [allData, setAllData] = useState<any[]>([]);
   const [cursor, setCursor] = useState(0);
   const { data, isFetching } = useGetPlayersQuery(cursor);
@@ -29,7 +29,7 @@ export default function PokemonList() {
 
     document.addEventListener("scroll", onScroll);
     return () => document.removeEventListener("scroll", onScroll);
-  }, [isFetching, data]);
+  }, [cursor, isFetching, data]);
 
   return (
     <div className="App space-y-2 p-4">

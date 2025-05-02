@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import PokemonList from "@/components/PokemonList";
+import PlayerList from "@/components/PlayerList";
+import TeamList from "@/components/TeamList";
 import { Button } from "@/components/ui/button";
 import { redirect } from "next/navigation";
 import { useState } from "react";
@@ -34,11 +35,7 @@ export default function Home() {
       </div>
 
       {/* body */}
-      {page === "players" ? <PokemonList /> : <Teams />}
+      {page === "players" ? <PlayerList /> : <TeamList />}
     </section>
   );
 }
-
-const Teams = () => {
-  return <div>Teams</div>;
-};

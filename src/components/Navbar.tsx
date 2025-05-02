@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { LogOut, Settings, User } from "lucide-react";
@@ -19,7 +20,6 @@ const Navbar = () => {
   const pathname = usePathname();
   const hideNavbar = pathname === "/login";
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const user = useSelector((state: any) => state.auth.user);
   const dispatch = useDispatch();
 
