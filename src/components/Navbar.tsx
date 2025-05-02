@@ -25,7 +25,7 @@ const Navbar = () => {
 
   return (
     !hideNavbar && (
-      <nav className="bg-background sticky top-0 z-10 flex items-center justify-between p-4">
+      <nav className="bg-background sticky top-0 z-10 flex items-center justify-between border p-4">
         {/* left */}
         <div className="text-xl font-black">
           <Link href="/">My-Team</Link>
